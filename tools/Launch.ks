@@ -1,15 +1,19 @@
-runOncePath("./PrintCorner.ks").
+runOncePath("0:tools/PrintCorner.ks").
 
-declare global countdownStart is TimeStamp:SECOND.
+declare global countdownStart is TimeStamp():second.
 declare global secondsToLaunch is 10.
 
-print PrintUpperRight("Countdown initiated").
+set currentVessel to ship.
+
+LOCK g TO SHIP:BODY:MU / (SHIP:BODY:RADIUS + SHIP:ALTITUDE)^2.
+LOCK twr to (currentVessel:thrust / (g * ship:mass)).
+
+print PrintUpperRight("Countdown initiated" + countdownStart).
 
 declare function CountDown {
-    parameter secondsRemaining is 10.
-    set secondsRemaining to (countdownStart + secondsRemaining) + TimeStamp:SECOND.
-    PrintUpperLeft("T - " + secondsRemaining).
-    set secondsToLaunch to secondsRemaining.
+    set secondsToLaunch to (countdownStart + secondsToLaunch) - TimeStamp():second.
+    set upperLeftRow to 0.
+    PrintUpperLeft("T - " + secondsToLaunch).
 }
 
 set litEngines to list().
@@ -22,7 +26,7 @@ declare function LightEngines {
         list engines in allEngines.
         for currentEngine in allEngines {
             if currentEngine:ignition {
-                litEngines.add(currentEngine).
+                litEngines:add(currentEngine).
             }
         }
         if litEngines:length > 0 {
@@ -38,7 +42,22 @@ declare function LiftOff {
     PrintUpperRight("Liftoff!").
 }
 
+declare function HandleEnginesNotAllowingShutdown {
+    for currentEngine in litEngines {
+        if currentEngine:allowShutdown = false {
+            PrintUpperRight("Solid booster(s) active").
+            if currentEngine:flameout {
+                PrintUpperRight("Solid booster failure detected").
+                return false.
+            }
+        }
+    }
+    return true.
+}
+
 declare local preflightState is 0.
+
+
 declare function PreflightCheck {
     if preflightState = 0 {
         set preflightState to 1.
@@ -53,17 +72,27 @@ declare function PreflightCheck {
         }
     }
     if preflightState = 2 {
-        if secondsToLaunch < 1 {
-            lock currentTWR to addons:ke:actualTWR.
-            lock targetTWR to addons:ke:totalTWR.
+        if (litEngines:length = 0) {
+            set preflightState to 1.
+            PrintUpperRight("No engines detected").
+        }
 
-            print "Current TWR: " + currentTWR.
-            print "Target TWR: " + targetTWR.
+        // Handle solids in first stage
+        if (HandleEnginesNotAllowingShutdown()) {
+            set secondsToLaunch to 0.
+            PrintUpperRight("Lift-off imminent!").
+            wait 0.
+        }
+
+        if secondsToLaunch < 1 {
+            set currentTWR to twr.
+
+            PrintUpperRight("Current TWR: " + currentTWR).
 
             local TWROk is false.
             local EnginesOk is false.
 
-            if currentTWR > targetTWR * 0.95 and currentTWR > 1 {
+            if currentTWR > 1 {
                 PrintUpperRight("TWR nominal").
                 set TWROk to true.
             }
@@ -77,6 +106,7 @@ declare function PreflightCheck {
                         break.
                     }
                     else {
+                        PrintUpperRight("Engines nominal").
                         set EnginesOk to true.
                     }
                 }
@@ -85,13 +115,20 @@ declare function PreflightCheck {
             if TWROk and EnginesOk {
                 set preflightState to 3.
             }
+            else {
+                set preflightState to -1.
+            }
         }
     }
     if preflightState = 3 and secondsToLaunch < 0 {
         PrintUpperRight("All systems go").
         return true.
     }
-    return false.
+    if preflightState = -1 {
+        PrintUpperRight("Preflight check failed").
+
+        return false.
+    }
 }
 
 
@@ -103,5 +140,8 @@ declare function Launch {
         LiftOff().
         return true.
     }
-    false.
+    if not readyToLaunch {
+        return true.
+    }
+    return false.
 }

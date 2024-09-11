@@ -1,9 +1,3 @@
-// Print the string you pass in, in one of the 4 corners
-// of the terminal:
-//   mode = 1 for upper-left, 2 for upper-right, 3
-//          for lower-left, and 4 for lower-right:
-//
-
 declare global upperLeftRow is 0.
 declare global upperRightRow is 0.
 declare global bottomLeftRow is 0.
