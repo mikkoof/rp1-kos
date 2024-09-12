@@ -4,6 +4,7 @@ declare global countdownStart is TimeStamp():second.
 declare global secondsToLaunch is 10.
 
 set currentVessel to ship.
+set abort to false. 
 
 LOCK g TO SHIP:BODY:MU / (SHIP:BODY:RADIUS + SHIP:ALTITUDE)^2.
 LOCK twr to (currentVessel:thrust / (g * ship:mass)).
@@ -46,13 +47,9 @@ declare function HandleEnginesNotAllowingShutdown {
     for currentEngine in litEngines {
         if currentEngine:allowShutdown = false {
             PrintUpperRight("Solid booster(s) active").
-            if currentEngine:flameout {
-                PrintUpperRight("Solid booster failure detected").
-                return false.
-            }
+            return true.
         }
     }
-    return true.
 }
 
 declare local preflightState is 0.
@@ -112,11 +109,12 @@ declare function PreflightCheck {
                 }
             }
 
-            if TWROk and EnginesOk {
-                set preflightState to 3.
-            }
-            else {
+            if not EnginesOk {
                 set preflightState to -1.
+            }
+
+            if TWROk {
+                set preflightState to 3.
             }
         }
     }
@@ -126,9 +124,9 @@ declare function PreflightCheck {
     }
     if preflightState = -1 {
         PrintUpperRight("Preflight check failed").
-
-        return false.
+        set abort to true.
     }
+    return false.
 }
 
 
@@ -140,7 +138,7 @@ declare function Launch {
         LiftOff().
         return true.
     }
-    if not readyToLaunch {
+    if abort {
         return true.
     }
     return false.
