@@ -1,9 +1,7 @@
 runOncePath("0:tools/PrintCorner.ks").
 runOncePath("0:tools/Launch/lib/LightEngines.ks").
 
-set currentVessel to ship.
-LOCK g TO SHIP:BODY:MU / (SHIP:BODY:RADIUS + SHIP:ALTITUDE)^2.
-LOCK twr to (currentVessel:thrust / (g * ship:mass)).
+set LV to SHIP.
 
 declare local launchState is 0.
 

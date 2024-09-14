@@ -1,8 +1,8 @@
-lock countdownStart to TimeStamp():second.
+set countdownStart to TimeStamp():seconds.   // 1
+lock currentTime to TimeStamp():seconds.     // 2
 parameter secondsToLaunch is 10.
 
 declare function GetSecondsToLaunch {
-    set secondsToLaunch to (countdownStart + secondsToLaunch) - countdownStart.
-    return secondsToLaunch.
+    return countdownStart + secondsToLaunch - currentTime.
 }
 

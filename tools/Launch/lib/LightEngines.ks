@@ -1,7 +1,8 @@
 runOncePath("0:tools/PrintCorner.ks").
 
+set LV to SHIP.
 LOCK g TO SHIP:BODY:MU / (SHIP:BODY:RADIUS + SHIP:ALTITUDE)^2.
-LOCK twr to (currentVessel:thrust / (g * ship:mass)).
+LOCK twr to (LV:thrust / (g * ship:mass)).
 
 
 list engines in allEngines.
@@ -39,7 +40,7 @@ declare function VerifyEnginesWorking {
 }
 
 declare function VerifyStableThrust {
-  if ship:maxThrust * 0.9 < ship:thrust {
+  if ship:maxThrust * 0.9 < ship:thrust and twr > 1 {
     PrintUpperRight("Thrust stable").
     return true.
   }

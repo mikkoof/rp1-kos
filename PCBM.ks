@@ -2,19 +2,25 @@ runOncePath("0:tools/Touchbase.ks").
 runOncePath("0:tools/Countdown.ks"). 
 runOncePath("0:tools/Launch/Patient.ks").
 runOncePath("0:tools/Staging/Staging.ks").  
+runOncePath("0:tools/lib/Mach.ks").
+runOncePath("0:tools/Launch/lib/SimpleGravityTurn.ks").
+clearScreen.
+set LV to SHIP.
 
-
-parameter pitchAngle is 8.
 
 lock timer to GetSecondsToLaunch().
 
 clearScreen.
 lock throttle to 1.
 
-set steer to heading(90,90).
-lock steering to steer.
+set controller to steeringManager.
+SET STEERINGMANAGER:SHOWFACINGVECTORS TO false.
 
-local flightState is 1.
+local direction to 90.
+local pitchAngle to 0.
+lock steering to lookdirup(heading(direction,90-pitchAngle):vector,ship:facing:upvector).
+
+global flightState is 1.
 when abort = true then {
   set flightState to 0.
 }.
@@ -29,34 +35,13 @@ until flightState = 0 {
     }
   }
 
-  // Gather initial velocity and altitude. roll to desired heading.
-  if flightState = 2 {
-    set steer to heading(90,90).
-    if (vessel:airspeed > 100 or vessel:altitude > 100) {
-      set flightState to 3.
-    }
-  }
-
   // Activate gravity turn.
-  if flightState = 3 {
-    set desiredPitch to 90 - pitchAngle.
+  if flightState = 2 {
 
-    set steer to heading(90,90 - pitchAngle).
-    if vessel:heading():pitch < desiredPitch + 1 and vessel:heading():pitch > desiredPitch - 1 {
-      set flightState to 4.
-    }
   }
 
-  // point prograde until q < 0.1
-  if flightState = 4 {
-    set steer to prograde.
-    if vessel:dynamicpressure < 0.1 {
-      set flightState to 5.
-    }
-  }
-
-  if flightState = 5 {
-    if vessel:thrust = 0 {
+  if flightState =3 {
+    if LV:thrust = 0 {
       set flightState to 0.
     }
   }

@@ -3,11 +3,11 @@ runOncePath("0:tools/PrintCorner.ks").
 declare global countdownStart is TimeStamp():second.
 declare global secondsToLaunch is 10.
 
-set currentVessel to ship.
+set LV to SHIP.
 set abort to false. 
 
 LOCK g TO SHIP:BODY:MU / (SHIP:BODY:RADIUS + SHIP:ALTITUDE)^2.
-LOCK twr to (currentVessel:thrust / (g * ship:mass)).
+LOCK twr to (LV:thrust / (g * ship:mass)).
 
 print PrintUpperRight("Countdown initiated" + countdownStart).
 
